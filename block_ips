@@ -1,0 +1,24 @@
+#! /bin/bash
+#Bloquear ips de paises que suelen enviar spam y mayor cantidad de conexiones
+clear
+`netstat -ntu | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -n | tail -n 30 | sed -e 's/[ \t]*//' | sed s/" "/:/ | tee ips.txt`
+for linea in $(cat ips.txt)
+  do
+    if [ ${#linea} -gt 5 ]; then
+     ip=$(echo "$linea" | cut -d\: -f2)
+     #echo "$ip"
+     cant=$(echo "$linea" | cut -d\: -f1)
+     #echo $ip
+     pais=$(geoiplookup $ip | cut -d: -f2 | cut -d, -f1 | tr -d '[[:space:]]')
+     if [ "$pais" = "AR" ]; then
+          echo "-ar"   
+     else
+        if [ "$pais" = "CN" ] || [ "$pais" = "PL" ] || [ "$pais" = "DE" ] || [ "$pais" = "RU" ] || [ "$pais" = "PH" ] || [ "$pais" = "AZ" ] || [ "$pais" = "IE" ] || [ "$pais" = "PK" ] ; then
+          echo "$pais $ip"
+          echo -e $cant':'$ip':'$pais >> ipsBloquear.txt
+          `csf -d $ip`   
+        fi
+    fi
+   fi
+  done
+
